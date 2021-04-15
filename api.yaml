@@ -1,0 +1,127 @@
+openapi: "3.0.2"
+info:
+  title: Ovni
+  version: "0.0.1"
+  description: OpenVPN node interface is a connection management system to create, authenticate and manage multiple connection certificates across many nodes.
+
+components:
+  schemas:
+    Connection:
+      type: object
+      properties:
+        cn:
+          type: string
+          description: OpenVPN connection common name.
+        password:
+          type: string
+          description: OpenVPN connection password.
+        connectCallback:
+          type: string
+          description: POST on URL on connection.
+        disconnectCallback:
+          type: string
+          description: POST on URL on disconnection.
+        callbackAuthorization:
+          type: string
+          description: The authorization header used for callbacks.
+        active:
+          type: boolean
+          description: Is connection active.
+
+paths:
+  /connections:
+    get:
+      description: Returns all the connections
+      responses:
+        200:
+          description: OK
+
+    post:
+      description: Creates a new connection and keeps track of it.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Connection"
+
+      responses:
+        200:
+          description: OK
+        409:
+          description: Common name is already in use
+
+    delete:
+      description: Deletes all the connections
+      responses:
+        200:
+          description: OK
+
+  /connections/{cn}:
+    get:
+      description: Returns a connection.
+      responses:
+        200:
+          description: OK
+        404:
+          description: No connection with common name found
+    patch:
+      description: Updates a connection.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Connection"
+      responses:
+        200:
+          description: OK
+        404:
+          description: No connection with common name found
+    delete:
+      description: Deletes a connection.
+      responses:
+        200:
+          description: OK
+        404:
+          description: No connection with common name found
+
+  /auth-user-pass-verify:
+    post:
+      description: Gives permission to authenticate the client
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+              example: "cn\npassword"
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: OK
+  /client-connect:
+    post:
+      description: Activates the connection and calls the callback.
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+              example: "cn"
+      responses:
+        200:
+          description: OK
+  /client-disconnect:
+    post:
+      description: Deactivates the connection and calls the callback.
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+              example: "cn"
+      responses:
+        200:
+          description: OK

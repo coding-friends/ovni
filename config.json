@@ -1,0 +1,19 @@
+{
+  "server": {
+    "port": 8080,
+    "secure": true,
+    "certificate": "./cert",
+    "publicKey": "./pub",
+    "cors": "*"
+  },
+  "nodes": [
+    { "name": "tcp0", "port": 8890, "password": "123456" },
+    { "name": "tcp1", "port": 8891, "password": "123456" },
+    { "name": "tcp2", "port": 8892, "password": "123456" }
+  ],
+  "access": [
+    { "ip": "127.0.0.1", "secret": "some super secret token" },
+    { "ip": "127.0.0.1", "secret": "some super secret token" },
+    { "ip": "127.0.0.1", "secret": "some super secret token" }
+  ]
+}
