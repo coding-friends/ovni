@@ -1,27 +1,20 @@
 import { fastify, FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { IncomingMessage, ServerResponse } from "node:http";
 import { Authenticator } from "./Authenticator";
+import { Contract } from "./ContractManager";
 import MasterManager from "./MasterManager";
-import { userSchema } from "./schemas";
-import { Contract } from "./utils";
-
-enum Endpoints {
-  postClient = "/users",
-}
+import { contractSchema } from "./schemas";
 
 export class WebApp {
   router: FastifyInstance;
   private authenticator: Authenticator;
   private masterManager: MasterManager;
-  private configFile: string;
   constructor(configFile: string) {
     this.router = fastify();
-    this.configFile = configFile;
     this.authenticator = new Authenticator(configFile);
     this.masterManager = new MasterManager(configFile);
 
     this.router.addHook("onRequest", (req, res, done) => {
-      if (this.authenticator.authenticate(req.ip, req.headers.authorization)) done();
+      if (this.authenticator.authorize(req.ip, req.headers.authorization)) done();
       else
         res
           .code(401)
@@ -30,16 +23,15 @@ export class WebApp {
           );
     });
 
-    this.initRoutes();
+    this.useEndpoints();
   }
 
-  // TODO: when there is a post client connection, add the connection contract to the master manager
-  initRoutes() {
-    this.router.post(Endpoints.postClient, { schema: userSchema }, (req, res) => {
-      // adds a client
-      // TODO: Update the schema
+  useEndpoints() {
+    this.router.post("/contracts", { schema: contractSchema }, (req, res) => {
       const contract = req.body as Contract;
-      this.masterManager.addConnection(contract);
+      this.masterManager.registerContract(contract);
     });
+
+    this.router.get("/contracts/:nodeName/:username", (req, res) => {});
   }
 }

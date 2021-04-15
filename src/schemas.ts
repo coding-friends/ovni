@@ -1,4 +1,4 @@
-export const userSchema = {
+export const contractSchema = {
   body: {
     type: "object",
     properties: {

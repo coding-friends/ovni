@@ -1,7 +1,5 @@
-import { Contract, Indexable } from "./utils";
+import { Contract } from "./ContractManager";
 import { NodeManager } from "./NodeManager";
-import { Authenticator } from "./Authenticator";
-import ContractManager from "./ContractManager";
 interface OvniNode {
   name: string;
   port: number;
@@ -18,13 +16,9 @@ interface NodeManagerCollection {
 export default class MasterManager {
   private nodeCollection: NodeCollection;
   private nodeManagerCollection: NodeManagerCollection;
-  private authenticator: Authenticator;
-  private contractManager: ContractManager;
-  private Config: Indexable;
-  private configPath: string;
+  private Config: any;
   constructor(configPath: string) {
     this.Config = require(configPath);
-    this.configPath = configPath;
     this.nodeCollection = Object.assign(
       {},
       ...this.Config.nodes.map((node: OvniNode) => {
@@ -39,27 +33,19 @@ export default class MasterManager {
         return { name: nodeManager };
       })
     );
-    this.authenticator = new Authenticator(this.configPath);
-    this.contractManager = new ContractManager();
-    this.initNodes();
   }
 
   // Master manager will then check if the nodeName is valid and add it to the connection manager
-  addConnection(contract: Contract) {
+  registerContract(contract: Contract) {
     const { nodeName } = contract;
     if (!(nodeName in this.nodeManagerCollection)) {
+    }
+    const nodeManager = this.nodeManagerCollection[nodeName];
+    if (!nodeManager) {
       throw new Error(
         `targetNode ${nodeName} was not a valid target node. Please try again with a valid node`
       );
     }
-    this.contractManager.add(contract);
-  }
-  initNodes() {
-    const handleUserCallBack = (username: string, password: string) => {
-      return this.contractManager.authorize(username, password);
-    };
-    Object.values(this.nodeManagerCollection).forEach((nodeManager) => {
-      nodeManager.handleAuthentication(handleUserCallBack);
-    });
+    nodeManager.contractManager.add(contract);
   }
 }

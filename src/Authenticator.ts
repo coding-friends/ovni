@@ -16,7 +16,7 @@ export class Authenticator {
     );
   }
 
-  authenticate(ip: string, secret: string): boolean {
+  authorize(ip: string, secret: string): boolean {
     if (ip in this.ipMaps) {
       const officialSecret = this.ipMaps[secret];
       return secret === officialSecret;

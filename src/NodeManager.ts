@@ -1,7 +1,6 @@
 import { Socket } from "net";
 import EventEmitter from "events";
-import ContractManager from "./ContractManager";
-import { Contract } from "./utils";
+import ContractManager, { Contract } from "./ContractManager";
 
 interface IClientEvent {
   env?: { [key: string]: string };
@@ -47,6 +46,7 @@ export class NodeManager {
     this.addSocketListeners();
     this.addIOListeners();
     this.addNotifListeners();
+    this.addClientListeners();
   }
 
   private addSocketListeners() {
@@ -89,23 +89,22 @@ export class NodeManager {
     });
   }
 
+  private addClientListeners() {
+    this.client.on(EClientEvent.Connect, (data: IClientEvent) => {
+      const { CID, KID, env } = data;
+      const { username, password } = env as { username: string; password: string };
+      if (this.contractManager.authorize(username, password)) {
+        this.writeClientAuth(CID, KID);
+      }
+    });
+  }
+
   write(content: string) {
     this.socket.write(content);
   }
 
   writeLine(line: string) {
     this.write(line + "\n");
-  }
-
-  handleAuthentication(handleUserCallBack: (username: string, password: string) => boolean) {
-    this.client.on(EClientEvent.Connect, (data: IClientEvent) => {
-      const { CID, KID, env } = data;
-      const { username, password } = env as { username: string; password: string };
-      if (this.contractManager.authorize(username, password))
-        if (handleUserCallBack(username, password)) {
-          this.writeClientAuth(CID, KID);
-        }
-    });
   }
 
   connectUser(contract: Contract) {

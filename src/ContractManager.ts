@@ -1,4 +1,11 @@
-import { Contract } from "./utils";
+export interface Contract {
+  username: string;
+  password: string;
+  nodeName: string;
+  requestTimeout?: number;
+  connectionTTL?: number;
+  callbackURL?: string;
+}
 
 export default class ContractManager {
   private users: { [user: string]: Contract };
