@@ -1,28 +1,22 @@
-#!/usr/bin/env node
 
 import { WebApp } from "./WebApp";
 import { ArgumentParser } from "argparse";
-const { version } = require("package.json");
-
+import Configuration from "./Configuration";
+console.log("Welcome ... to the best OVNI")
 const parser = new ArgumentParser({
-  description: "Argparse example",
+  description: "The best OVNI of all",
 });
 
-parser.add_argument("-v", "--version", { action: "version", version });
-parser.add_argument("-p", "--port", {
-  help: "The port to use",
-  default: 8090,
-  type: "number",
-});
 parser.add_argument("-c", "--config", {
   help: "The path of the config file to use",
-  default: "./config.json",
-  type: "string",
+  "default": "./config.json",
+  "type": "string",
 });
 
 const args = parser.parse_args();
-const { config, port } = args;
+const { config : configPath, port } = args;
 
 // Example usage
-console.log(port);
+const config = new Configuration(configPath)
 const app = new WebApp(config);
+app.start()

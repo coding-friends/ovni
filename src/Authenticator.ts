@@ -1,24 +1,17 @@
-import { Indexable } from "./utils";
-const configPath = "../config.json";
+import Configuration, {AccessConfig} from "./Configuration";
+import { Dict, dictComp } from "./utils";
 
 export class Authenticator {
-  private configPath: string;
-  private Config: Indexable;
-  private ipMaps: Indexable;
-  constructor(configPath: string) {
-    this.configPath = configPath;
-    this.Config = require(configPath);
-    this.ipMaps = Object.assign(
-      {},
-      ...this.Config.access.map(({ ip, secret }: { ip: string; secret: string }) => ({
-        [ip]: secret,
-      }))
-    );
+  private config: Configuration;
+  private ipMaps: Dict<AccessConfig>;
+  constructor(config: Configuration) {
+    this.config = config;
+    this.ipMaps = dictComp(access => [access.ip,access], this.config.access)
   }
 
   authorize(ip: string, secret: string): boolean {
     if (ip in this.ipMaps) {
-      const officialSecret = this.ipMaps[secret];
+      const officialSecret = this.ipMaps[ip].secret;
       return secret === officialSecret;
     }
     return false;

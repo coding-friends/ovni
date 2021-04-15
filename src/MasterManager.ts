@@ -1,38 +1,14 @@
+import Configuration, {NodeConfig} from "./Configuration";
 import { Contract } from "./ContractManager";
 import { NodeManager } from "./NodeManager";
-interface OvniNode {
-  name: string;
-  port: number;
-  password: string;
-}
-interface NodeCollection {
-  [name: string]: OvniNode;
-}
-
-interface NodeManagerCollection {
-  [name: string]: NodeManager;
-}
+import { Dict, dictComp} from "./utils";
 
 export default class MasterManager {
-  private nodeCollection: NodeCollection;
-  private nodeManagerCollection: NodeManagerCollection;
-  private Config: any;
-  constructor(configPath: string) {
-    this.Config = require(configPath);
-    this.nodeCollection = Object.assign(
-      {},
-      ...this.Config.nodes.map((node: OvniNode) => {
-        const { name } = node;
-        return { [name]: node };
-      })
-    );
-    this.nodeManagerCollection = Object.assign(
-      {},
-      ...Object.keys(this.nodeCollection).map((name: string) => {
-        const nodeManager = new NodeManager();
-        return { name: nodeManager };
-      })
-    );
+  private nodeManagerCollection: Dict<NodeManager>;
+  private config: Configuration;
+  constructor(config: Configuration) {
+    this.config = config
+    this.nodeManagerCollection = dictComp(node => [node.name, new NodeManager(node)],this.config.nodes)
   }
 
   // Master manager will then check if the nodeName is valid and add it to the connection manager

@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsc -w src/index.ts --outDir build",
-    "build": "tsc src/index.ts --outDir build",
-    "run": "node build/index.js"
+    "dev": "tsc -w src/index.ts --outDir build/",
+    "build": "rm -f build/* && tsc src/index.ts --outDir build/",
+    "start": "npm run build && node build/index.js"
   },
   "keywords": [],
   "author": "",
