@@ -1,5 +1,6 @@
 # build
 build/
+build/*
 # Created by https://www.toptal.com/developers/gitignore/api/node,vscode,vim
 # Edit at https://www.toptal.com/developers/gitignore?templates=node,vscode,vim
 

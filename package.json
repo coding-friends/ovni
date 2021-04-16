@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsc -w src/index.ts --outDir build/",
     "build": "rm -f build/* && tsc src/index.ts --outDir build/",
-    "start": "npm run build && node build/index.js"
+    "start": "npm run build && node build/index.js",
+    "clean": "rm src/*.js src/*.js.map"
   },
   "keywords": [],
   "author": "",
@@ -16,7 +17,9 @@
     "@sinclair/typebox": "^0.16.5",
     "@types/argparse": "^2.0.5",
     "@types/node": "^14.14.37",
+    "@types/node-fetch": "^2.5.10",
     "argparse": "^2.0.1",
-    "fastify": "^3.14.2"
+    "fastify": "^3.14.2",
+    "node-fetch": "^2.6.1"
   }
 }

@@ -2,8 +2,9 @@ import { Socket } from "net";
 import { EventEmitter } from "events";
 import ContractManager, { Contract } from "./ContractManager";
 import {NodeConfig} from "./Configuration";
+import {executeWebhook} from "./webhooks";
 
-interface IClientEvent {
+export interface IClientEvent {
     env?: { [key: string]: string };
     KID: string;
     CID: string;
@@ -44,23 +45,45 @@ export class NodeManager {
         this.io = new EventEmitter();
         this.notif = new EventEmitter();
         this.client = new EventEmitter();
-        this.contractManager = new ContractManager();
+        this.contractManager = new ContractManager(this);
 
         this.addSocketListeners();
         this.addIOListeners();
         this.addNotifListeners();
         this.addClientListeners();
         this.socket.connect(config.port,config.address)
+        console.log(`connecting socket to ${config.address}:${config.port}`)
     }
 
     private addSocketListeners() {
-        this.socket.on("data", (data) =>
+        this.socket.on("connect", () => {
+            console.log(`Successfully connected to ${this.config.name}`)
+        })
+        this.socket.on("data", (data) => {
             this.io.emit("output", data.toString())
+            // TODO: remove in production
+            console.log(data.toString())
+        }
         );
+    }
+    addContract(contract : Contract) {
+        this.contractManager.add(contract)
+    }
+    deleteContract(contract: Contract) {
+        if (contract.active) {
+            this.killClient(contract.username)
+        } else {
+            this.contractManager.remove(contract.username)
+        }
+    }
+
+    private killClient(username : string){
+        this.writeLine(`kill ${username}`)
     }
 
     private addIOListeners() {
         this.io.on("output", (data: string) => {
+            console.log("from on output",data.toString())
             if (data.startsWith("ENTER PASSWORD:"))
                 return this.io.emit("enter-password");
             const lines = data.split("\n");
@@ -70,6 +93,7 @@ export class NodeManager {
         });
 
         this.io.on("line", (data: string) => {
+            console.log(`new line here! ${data}`)
             if (data.startsWith(">"))
                 this.io.emit("notification", data.slice(1));
         });
@@ -79,6 +103,7 @@ export class NodeManager {
             if (match) this.notif.emit(match[1], match[2]);
         });
         this.io.on("enter-password",() => {
+            console.log("received event to enter password!")
             this.writeLine(this.config.password)
         })
     }
@@ -91,7 +116,8 @@ export class NodeManager {
         ]) {
             this.notif.on(event, (data: string) => {
                 const [CID, KID] = (data + ",").split(",");
-                this.current = { CID, KID, event };
+                const env = {}
+                this.current = { CID, KID, event, env };
             });
         }
         this.notif.on(EClientEvent.Env, (data: string) => {
@@ -111,10 +137,33 @@ export class NodeManager {
                 username: string;
                 password: string;
             };
+            console.log("New client connection ", data)
             if (this.contractManager.authorize(username, password)) {
+                const contract = this.contractManager.getByUsername(username)
+                contract.active = true;
                 this.writeClientAuth(CID, KID);
+                this.contractManager.handleConnect(contract)
+                executeWebhook(data,contract)
+            } else {
+                this.writeClientDeny(CID, KID, `Dumbo with CID=${CID},KID=${KID},username=${username},password=${password}`, "You entered the wrong credentials. Please try again.")
             }
         });
+        this.client.on(EClientEvent.Disconnect, (data: IClientEvent) => {
+            const {username} = data.env;
+            const contract = this.contractManager.getByUsername(username)
+            if (!contract) {
+                return console.log(`Contract with the username ${username} does not exist!`)
+            }
+            contract.active = false;
+            if (contract.dieOnDisconnect) {
+                this.contractManager.remove(username)
+            }
+            // TODO: do the callbacks here!
+            console.log("just before executing webhook")
+            executeWebhook(data,contract)
+
+            
+        })
     }
 
     write(content: string) {
@@ -140,7 +189,7 @@ export class NodeManager {
         clientReason: string
     ) {
         this.writeLine(
-            `client-deny ${CID} ${KID} ${reason} ${clientReason ?? reason}`
+            `client-deny ${CID} ${KID} "${reason}" "${clientReason ?? reason}"`
         );
     }
 }

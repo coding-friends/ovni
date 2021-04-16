@@ -3,7 +3,7 @@ import { Authenticator } from "./Authenticator";
 import Configuration from "./Configuration";
 import { Contract } from "./ContractManager";
 import MasterManager from "./MasterManager";
-import { contractSchema } from "./schemas";
+import { contractSchema, deleteContractSchema } from "./schemas";
 
 export class WebApp {
     router: FastifyInstance;
@@ -30,12 +30,25 @@ export class WebApp {
     }
 
     useEndpoints() {
-        this.router.post("/contracts", { schema: contractSchema }, (req) => {
+        this.router.post("/contracts", { schema: contractSchema }, (req,res) => {
             const contract = req.body as Contract;
             this.masterManager.registerContract(contract);
+            res.send("Ok") 
+            res.status(200)
         });
-
-        this.router.get("/contracts/:nodeName/:username", (req, res) => {});
+        this.router.get("/contracts", { schema: contractSchema }, (req,res) => {
+            const contract = req.body as Contract;
+            this.masterManager.registerContract(contract);
+            res.send("Ok") 
+            res.status(200)
+        });
+        this.router.delete("/contracts", { schema: deleteContractSchema }, (req,res) => {
+            
+            const contract = req.body as Contract;
+            this.masterManager.deleteContract(contract)
+            res.send("Ok") 
+            res.status(200)
+        });
     }
 
     start() {

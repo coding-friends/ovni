@@ -7,7 +7,7 @@
     "cors": "*"
   },
   "nodes": [
-    { "name": "tcp0", "port": 8890, "password": "123456","address" : "127.0.0.1" }
+    { "name": "tcp0", "port": 8888, "password": "123456","address" : "127.0.0.1" }
   ],
   "access": [
     { "ip": "127.0.0.1", "secret": "some super secret token", "nodes": [] },
